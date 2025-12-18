@@ -433,7 +433,7 @@
                     p.homePosition = savedPiece.homePosition;
                     
                     const m = new THREE.Mesh(
-                        new THREE.CylinderGeometry(0.4,0.4,0.8,16), 
+                        new THREE.CylinderGeometry(0.55,0.55,1.0,16), 
                         new THREE.MeshStandardMaterial({color:PLAYERS[pid].color})
                     );
                     m.castShadow=true;
@@ -1067,7 +1067,7 @@
             activePlayers.forEach(pid => {
                 for(let i=0; i<4; i++) {
                     const p = new GamePiece(pid, i);
-                    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.8,16), new THREE.MeshStandardMaterial({color:PLAYERS[pid].color}));
+                    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,1.0,16), new THREE.MeshStandardMaterial({color:PLAYERS[pid].color}));
                     m.castShadow=true; m.userData={piece:p};
                     const [x,z] = p.getWorldPosition();
                     const targetX = (x-7)*2, targetZ = (z-7)*2;
