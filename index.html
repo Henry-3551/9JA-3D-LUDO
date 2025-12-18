@@ -120,6 +120,25 @@
         }
         #start-button:hover { transform: scale(1.05); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
         
+        /* Game Options Buttons */
+        .game-buttons { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .game-buttons button {
+            background: white; color: #006400; border: none; padding: 20px 40px;
+            border-radius: 50px; font-size: 20px; font-weight: bold; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden;
+        }
+        .game-buttons button:hover { transform: scale(1.05); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+        .game-buttons button.secondary {
+            background: rgba(255,255,255,0.3); color: white; border: 2px solid white;
+        }
+        .game-buttons button.secondary:hover { background: rgba(255,255,255,0.5); }
+        
+        @media (max-width: 768px) {
+            .game-buttons { flex-direction: column; gap: 15px; }
+            .game-buttons button { padding: 15px 30px; font-size: 18px; width: 100%; max-width: 300px; }
+        }
+        
         /* Ripple Effect */
         .ripple {
             position: absolute;
@@ -188,7 +207,7 @@
         <div class="dice-decoration bottom-right">🎲</div>
         <h1>🎲 9JA LUDO 🎲</h1>
         <p>Experience the classic board game in stunning 3D!👌🏾</p>
-        <div class="player-select">
+        <div class="player-select" id="player-select">
             <label for="num-players">Select Number of Players:</label>
             <select id="num-players">
                 <option value="2">2 Players</option>
@@ -196,7 +215,9 @@
                 <option value="4" selected>4 Players</option>
             </select>
         </div>
-        <button id="start-button">Start Game</button>
+        <div class="game-buttons" id="game-buttons">
+            <button id="start-button">Start Game</button>
+        </div>
     </div>
 
     <div id="game-container">
@@ -443,6 +464,65 @@
             updateStatus(`${PLAYERS[currentPlayer].name}'s turn (Game Restored)`);
             speak(`Welcome back! ${PLAYERS[currentPlayer].name}, it's your turn.`);
             enableDiceRoll();
+        }
+        
+        // Check if saved game exists and update start screen UI
+        function checkSavedGame() {
+            const savedGame = loadGameState();
+            const gameButtonsContainer = document.getElementById('game-buttons');
+            const playerSelect = document.getElementById('player-select');
+            
+            if (savedGame && savedGame.activePlayers && savedGame.activePlayers.length > 0) {
+                // Saved game exists - show continue and new game options
+                gameButtonsContainer.innerHTML = `
+                    <button id="continue-button">Continue Game</button>
+                    <button id="new-game-button" class="secondary">Start New Game</button>
+                `;
+                
+                // Hide player selection when continuing
+                playerSelect.style.display = 'none';
+                
+                // Add event listeners
+                document.getElementById('continue-button').addEventListener('click', continueGame);
+                document.getElementById('continue-button').addEventListener('click', createRipple);
+                document.getElementById('new-game-button').addEventListener('click', startNewGame);
+                document.getElementById('new-game-button').addEventListener('click', createRipple);
+            } else {
+                // No saved game - show normal start button
+                gameButtonsContainer.innerHTML = `<button id="start-button">Start Game</button>`;
+                playerSelect.style.display = 'block';
+                
+                // Add event listener
+                document.getElementById('start-button').addEventListener('click', startGame);
+                document.getElementById('start-button').addEventListener('click', createRipple);
+            }
+        }
+        
+        // Continue from saved game
+        function continueGame() {
+            playSound.click();
+            audioCtx.resume();
+            const savedGame = loadGameState();
+            if (savedGame) {
+                restoreGameState(savedGame);
+            }
+        }
+        
+        // Start completely new game (clear saved state)
+        function startNewGame() {
+            playSound.click();
+            clearGameState();
+            
+            // Show player selection and update UI
+            const playerSelect = document.getElementById('player-select');
+            const gameButtonsContainer = document.getElementById('game-buttons');
+            
+            playerSelect.style.display = 'block';
+            gameButtonsContainer.innerHTML = `<button id="start-button">Start Game</button>`;
+            
+            // Re-attach event listener
+            document.getElementById('start-button').addEventListener('click', startGame);
+            document.getElementById('start-button').addEventListener('click', createRipple);
         }
 
         // ===== SOUND EFFECTS SYSTEM =====
@@ -773,14 +853,8 @@
             createBoard();
             createDiceMeshes();
             
-            // Check for saved game state and restore if available
-            const savedGame = loadGameState();
-            if (savedGame && savedGame.activePlayers && savedGame.activePlayers.length > 0) {
-                // Wait for board animation to complete before restoring
-                setTimeout(() => {
-                    restoreGameState(savedGame);
-                }, 2000);
-            }
+            // Check for saved game and update UI
+            checkSavedGame();
             
             animate();
         }
@@ -1399,9 +1473,7 @@
         
         // ===== EVENT LISTENERS =====
         
-        // Button click handlers
-        document.getElementById('start-button').addEventListener('click', startGame);
-        document.getElementById('start-button').addEventListener('click', createRipple);
+        // Button click handlers (start button listener is added dynamically by checkSavedGame)
         document.getElementById('rules-button').addEventListener('click', showRules);
         document.getElementById('controls-button').addEventListener('click', toggleControls);
         
